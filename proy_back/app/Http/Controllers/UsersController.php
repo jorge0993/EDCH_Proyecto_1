@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 use Response;
-use App\Cliente;
+use App\Colaborador;
 use App\Usuario;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -11,15 +11,42 @@ class UsersController extends Controller
 {
     public function __construct(){
         $this->middleware('jwt.auth');
-}
+     }
     //Mostrar con paginacion
+    public function login(Request $request){
+        $usuario = Usuario::where('user',$request->user)->with(
+            array('colaborador'=>function($query){
+                $query->select('id','n_colaborador','apellido_p','apellido_m','nombres','email','jefe_inmediato','foto');
+            }))->first();
+            if(!$usuario){
+                return Response::json([
+                        'error' => 'El usuario no existe'
+                ], 404);
+            }else{
+                if(!Hash::check($request->password,$usuario->password)){
+                    return Response::json([
+                        'error' => [
+                            'message' => 'La contraseña es incorrecta'
+                        ]
+                    ], 404);
+                }
+                return Response::json([
+                    'data' => $this->transform($usuario)
+                ], 200);
+            }
+            
+
+    }
     public function index(Request $request){
         $search_term = $request->input('search');
         $limit = $request->input('limit')?$request->input('limit'):5;
 
         if ($search_term)
         {
-            $usuarios = Usuario::orderBy('id', 'DESC')->where('nombreusuario', 'LIKE', "%$search_term%")->select('id', 'nombreusuario', 'user')->paginate($limit); 
+            $usuarios = Usuario::orderBy('id', 'DESC')->where('user', 'LIKE', "%$search_term%")->with(
+                array('colaborador'=>function($query){
+                    $query->select('id','n_colaborador','apellido_p','apellido_m','nombres','email','jefe_inmediato','foto');
+                }))->select('id','user','id_colaborador')->paginate($limit);
 
             $usuarios->appends(array(
                 'search' => $search_term,
@@ -28,8 +55,12 @@ class UsersController extends Controller
         }
         else
         {
-            $usuarios = Usuario::orderBy('id', 'DESC')->select('id', 'nombreusuario', 'user')->paginate($limit);
-
+            $usuarios = Usuario::orderBy('id', 'DESC')->with(
+                array('colaborador'=>function($query){
+                    $query->select('id','n_colaborador','apellido_p','apellido_m','nombres','email','jefe_inmediato','foto');
+                })
+                )->select('id','user','id_colaborador')->paginate($limit);
+                
             $usuarios->appends(array(            
                 'limit' => $limit
             ));
@@ -38,7 +69,11 @@ class UsersController extends Controller
     }
     //Mostrar por id
     public function show($id){
-        $usuario = Usuario::where('id','=',$id);
+        $usuario = Usuario::with(
+            array('colaborador'=>function($query){
+                $query->select('id','n_colaborador','apellido_p','apellido_m','nombres','email','jefe_inmediato','foto');
+            })
+            )->find($id);
 
         if(!$usuario){
             return Response::json([
@@ -64,7 +99,7 @@ class UsersController extends Controller
     public function store(Request $request)
     {
 
-        if(! $request->nombreusuario or ! $request->user or ! $request->correo or ! $request->telefono or ! $request->foto or ! $request->idempresa or ! $request->password or ! $request->status or ! $request->activo or ! $request->tipousuario){
+        if(! $request->user or ! $request->password or ! $request->activo or ! $request->tipo or ! $request->id_colaborador){
             return Response::json([
                 'error' => [
                     'message' => 'Favor de proporcionar los datos necesarios'
@@ -82,7 +117,7 @@ class UsersController extends Controller
     //Actualizar
     public function update(Request $request, $id)
     {    
-        if(!$request->nombreusuario or ! $request->user or ! $request->correo or ! $request->telefono or ! $request->foto or ! $request->idempresa or ! $request->password or ! $request->status or ! $request->activo or ! $request->tipousuario){
+        if(! $request->user or ! $request->password or ! $request->activo or ! $request->tipo){
             return Response::json([
                 'error' => [
                     'message' => 'Favor de proporcionar los datos necesarios'
@@ -91,16 +126,10 @@ class UsersController extends Controller
         }
         
         $usuario = Usuario::find($id);
-        $usuario->nombreusuario = $request->nombreusuario;
         $usuario->user = $request->user;
         $usuario->password = $request->password;
-        $usuario->correo = $request->correo;
-        $usuario->telefono = $request->telefono;
-        $usuario->idempresa = $request->idempresa;
-        $usuario->foto = $request->foto;
-        $usuario->status = $request->status;
         $usuario->activo = $request->activo;
-        $usuario->tipousuario = $request->tipousuario;
+        $usuario->tipo = $request->tipo;
         $usuario->save();
 
         return Response::json([
@@ -112,6 +141,7 @@ class UsersController extends Controller
     {
         Usuario::destroy($id);
     }
+
     private function transformCollection($usuarios){
         $usuariosArray = $usuarios->toArray();
         return [
@@ -128,10 +158,6 @@ class UsersController extends Controller
     }
     
     private function transform($usuario){
-        return [
-                'id' => $usuario['id'],
-                'nombre' => $usuario['nombreusuario'],
-                'user' => $usuario['user'],
-        ];
+        return $usuario;
     }
 }

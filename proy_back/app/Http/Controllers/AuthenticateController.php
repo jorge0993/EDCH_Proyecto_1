@@ -31,7 +31,6 @@ class AuthenticateController extends Controller
     public function authenticate(Request $request)
     {
         $credentials = $request->only('user', 'password');
-        
         try {
             // verify the credentials and create a token for the user
             if (! $token = JWTAuth::attempt($credentials)) {
@@ -69,6 +68,11 @@ class AuthenticateController extends Controller
         }
 
         // the token is valid and we have found the user via the sub claim
-        return response()->json(compact('usuario'));
+        $user=Usuario::with(
+            array('colaborador'=>function($query){
+                $query->select('id','n_colaborador','apellido_p','apellido_m','nombres','email','jefe_inmediato','foto');
+            })
+            )->find($user->id);
+        return response()->json($user);
     }
 }
