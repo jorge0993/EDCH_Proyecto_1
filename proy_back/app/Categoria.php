@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 class Categoria extends Model
 {
     //
+    protected $table = 'categorias';
     protected $fillable = ['categoria', 'orden_cat'];
     
     public function encuestas(){

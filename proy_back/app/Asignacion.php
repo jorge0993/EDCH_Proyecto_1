@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class Asignacion extends Model
 {
+    protected $table = 'asignaciones';
     protected $fillable = ['id_encuesta', 'id_evaluador','fecha_asignacion','ano','id_periodo','estatus','id_asignador','id_evaluado'];
     
     public function evaluaciones(){

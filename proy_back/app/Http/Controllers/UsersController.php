@@ -12,31 +12,32 @@ class UsersController extends Controller
     public function __construct(){
         $this->middleware('jwt.auth');
      }
-    //Mostrar con paginacion
-    public function login(Request $request){
-        $usuario = Usuario::where('user',$request->user)->with(
-            array('colaborador'=>function($query){
-                $query->select('id','n_colaborador','apellido_p','apellido_m','nombres','email','jefe_inmediato','foto');
-            }))->first();
-            if(!$usuario){
-                return Response::json([
-                        'error' => 'El usuario no existe'
-                ], 404);
-            }else{
-                if(!Hash::check($request->password,$usuario->password)){
-                    return Response::json([
-                        'error' => [
-                            'message' => 'La contraseña es incorrecta'
-                        ]
-                    ], 404);
-                }
-                return Response::json([
-                    'data' => $this->transform($usuario)
-                ], 200);
-            }
+    
+    // public function login(Request $request){
+    //     $usuario = Usuario::where('user',$request->user)->with(
+    //         array('colaborador'=>function($query){
+    //             $query->select('id','n_colaborador','apellido_p','apellido_m','nombres','email','jefe_inmediato','foto');
+    //         }))->first();
+    //         if(!$usuario){
+    //             return Response::json([
+    //                     'error' => 'El usuario no existe'
+    //             ], 404);
+    //         }else{
+    //             if(!Hash::check($request->password,$usuario->password)){
+    //                 return Response::json([
+    //                     'error' => [
+    //                         'message' => 'La contraseña es incorrecta'
+    //                     ]
+    //                 ], 404);
+    //             }
+    //             return Response::json([
+    //                 'data' => $this->transform($usuario)
+    //             ], 200);
+    //         }
             
 
-    }
+    // }
+    //Mostrar con paginacion
     public function index(Request $request){
         $search_term = $request->input('search');
         $limit = $request->input('limit')?$request->input('limit'):5;
@@ -127,7 +128,7 @@ class UsersController extends Controller
         
         $usuario = Usuario::find($id);
         $usuario->user = $request->user;
-        $usuario->password = $request->password;
+        $usuario->password = Hash::make($request->password);
         $usuario->activo = $request->activo;
         $usuario->tipo = $request->tipo;
         $usuario->save();

@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 class Respuesta extends Model
 {
     //
+    protected $table = 'respuestas';
     protected $fillable = ['respuesta','comentario','id_evaluacion','id_pregunta'];
     
     public function evaluacion(){

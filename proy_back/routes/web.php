@@ -20,6 +20,13 @@ Route::group(['middleware' => 'cors', 'prefix' => 'api/v1'], function()
 Route::group(['middleware' => 'cors', 'prefix' => 'api/v1'], function(){
     // Route::resource('clientes', 'ClientesController');
     Route::resource('usuarios', 'UsersController');
+    Route::resource('areas', 'AreaController');
+    Route::resource('carreras', 'CarreraController');
+    Route::resource('departamentos', 'DepartamentoController');
+    Route::resource('escalas', 'EscalaController');
+    Route::resource('jerarquias', 'JerarquiaController');
+    Route::resource('micronegocios', 'MicronegocioController');
+
     Route::get('usuario/login', 'UsersController@login');
     
 });
