@@ -21,4 +21,5 @@ Route::group(['middleware' => 'cors', 'prefix' => 'api/v1'], function(){
     // Route::resource('clientes', 'ClientesController');
     Route::resource('usuarios', 'UsersController');
     Route::get('usuario/login', 'UsersController@login');
+    
 });
